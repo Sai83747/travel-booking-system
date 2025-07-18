@@ -1,0 +1,59 @@
+<div *ngIf="loading">Loading booking details...</div>
+
+<div *ngIf="!loading && bookingDetails" class="p-6 bg-white rounded shadow-md max-w-xl mx-auto">
+  <h2 class="text-2xl font-bold mb-4 text-center">Payment Details</h2>
+
+  <p><strong>Booking ID:</strong> {{ bookingDetails.id }}</p>
+  <p><strong>User:</strong> {{ bookingDetails.user }}</p>
+  <p><strong>Category:</strong> {{ bookingDetails.category }}</p>
+  <p><strong>Number of People:</strong> {{ bookingDetails.number_of_people }}</p>
+  <p><strong>Total Amount:</strong> ₹{{ bookingDetails.total_price }}</p>
+
+  <!-- Common Booking Info -->
+<p><strong>Booking ID:</strong> {{ bookingDetails.id }}</p>
+<p><strong>User:</strong> {{ bookingDetails.user }}</p>
+<p><strong>Category:</strong> {{ bookingDetails.category }}</p>
+<p><strong>Number of People:</strong> {{ bookingDetails.number_of_people }}</p>
+<p><strong>Total Amount:</strong> ₹{{ bookingDetails.total_price }}</p>
+
+<!-- ✅ Show flight details only if category is 'flight' -->
+<div *ngIf="bookingDetails.category === 'flight'" class="mt-4">
+  <h3 class="font-semibold text-lg mb-2">Flight Details</h3>
+  <div *ngFor="let flight of bookingDetails.flights" class="border rounded p-3 mb-3 bg-gray-50">
+    <p><strong>Flight Number:</strong> {{ flight.flight_number }}</p>
+    <p><strong>From:</strong> {{ flight.source }}</p>
+    <p><strong>To:</strong> {{ flight.destination }}</p>
+    <p><strong>Price Per Seat:</strong> ₹{{ flight.price_per_seat }}</p>
+    <p><strong>Discount:</strong> {{ flight.discount }}%</p>
+  </div>
+</div>
+
+<!-- ✅ Show hotel details only if category is 'package' -->
+<div *ngIf="bookingDetails.category === 'package'" class="mt-4">
+  <h3 class="font-semibold text-lg mb-2">Hotel Details</h3>
+  <div *ngFor="let hotel of bookingDetails.hotels" class="border rounded p-3 mb-3 bg-gray-50">
+    <p><strong>Hotel Name:</strong> {{ hotel.name }}</p>
+    <p><strong>Location:</strong> {{ hotel.location }}</p>
+    <p><strong>Price per Room:</strong> ₹{{ hotel.price_per_room }}</p>
+  </div>
+</div>
+
+
+  <label class="block mt-4 mb-2 font-semibold">Select Payment Method:</label>
+  <select [(ngModel)]="paymentMethod" class="border rounded px-3 py-2 w-full">
+    <option value="credit_card">Credit Card</option>
+    <option value="upi">UPI</option>
+    <option value="net_banking">Net Banking</option>
+  </select>
+
+  <button 
+    class="mt-6 bg-green-600 text-white px-4 py-2 rounded w-full hover:bg-green-700"
+    (click)="payNow()"
+  >
+    Pay Now
+  </button>
+</div>
+
+<div *ngIf="!loading && errorMessage" class="text-red-600 text-center mt-4">
+  {{ errorMessage }}
+</div>

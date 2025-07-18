@@ -1,0 +1,219 @@
+<div class="min-h-screen flex flex-col bg-gray-50">
+  <!-- Navbar -->
+  <app-navbar></app-navbar>
+
+  <!-- Main Content -->
+  <div class="flex-grow container mx-auto px-4 py-10">
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">🏨 Find Your Stay</h2>
+
+    <!-- Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8 bg-white p-4 rounded-2xl shadow-lg">
+      <!-- Destination -->
+      <div class="relative col-span-1">
+        <input
+          [(ngModel)]="destinationQuery"
+          (input)="searchDestination()"
+          type="text"
+          placeholder="📍 Destination"
+          class="border border-gray-300 rounded-xl px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
+        <ul
+          *ngIf="destinationResults.length"
+          class="absolute z-10 bg-white border mt-1 rounded-lg shadow max-h-40 overflow-y-auto w-full"
+        >
+          <li
+            *ngFor="let dest of destinationResults"
+            (click)="selectDestination(dest)"
+            class="px-4 py-2 hover:bg-blue-100 cursor-pointer"
+          >
+            {{ dest.name }}
+          </li>
+        </ul>
+      </div>
+
+      <!-- Guests -->
+      <input
+        [(ngModel)]="guests"
+        type="number"
+        min="1"
+        placeholder="👤 Guests"
+        class="border border-gray-300 rounded-xl px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      />
+
+      <!-- Price Range -->
+      <div class="md:col-span-2 flex flex-col justify-center">
+        <label class="font-medium text-gray-700 mb-2">
+          💰 Price Range: ₹{{ minPrice }} - ₹{{ maxPrice }}
+        </label>
+        <div class="flex items-center space-x-2">
+          <input
+            type="range"
+            min="0"
+            max="10000"
+            step="100"
+            [(ngModel)]="minPrice"
+            class="w-full accent-blue-600"
+          />
+          <input
+            type="range"
+            min="0"
+            max="10000"
+            step="100"
+            [(ngModel)]="maxPrice"
+            class="w-full accent-blue-600"
+          />
+        </div>
+        <small class="text-red-500 mt-1" *ngIf="minPrice > maxPrice">
+          ⚠️ Min Price cannot exceed Max Price
+        </small>
+      </div>
+
+      <!-- Search Button -->
+      <button
+        (click)="searchHotels()"
+        class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl hover:bg-blue-700 transition w-full self-end"
+      >
+        🔍 Search
+      </button>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="text-red-600 text-center font-medium mb-6">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Booking Popup -->
+    <div
+      *ngIf="showPopup && bookingDetails"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4 animate-fade-in">
+        <h2 class="text-2xl font-semibold text-center text-green-600">
+          🧾 Please Proceed to Payment
+        </h2>
+
+        <div class="text-gray-700 space-y-2">
+          <p><strong>Booking ID:</strong> {{ bookingDetails.booking_id }}</p>
+          <p><strong>Hotel:</strong> {{ bookingDetails.hotel.name }}</p>
+          <p><strong>Destination:</strong> {{ bookingDetails.destination }}</p>
+          <p><strong>No. of People:</strong> {{ bookingDetails.number_of_people }}</p>
+          <p><strong>Total Price:</strong> ₹{{ bookingDetails.total_price }}</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+          <button
+            (click)="proceedToPayment()"
+            class="bg-blue-600 text-white px-5 py-2 rounded-xl hover:bg-blue-700 transition"
+          >
+            💳 Proceed to Payment
+          </button>
+          <button
+            (click)="closePopup()"
+            class="bg-gray-300 text-gray-800 px-5 py-2 rounded-xl hover:bg-gray-400 transition"
+          >
+            ❌ Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hotel Cards -->
+    <div *ngIf="hotels.length > 0" class="grid md:grid-cols-2 gap-6">
+      <div *ngFor="let hotel of hotels" class="bg-white border rounded-2xl p-4 shadow-lg hover:shadow-xl transition">
+        <img
+          *ngIf="hotel.image_url"
+          [src]="hotel.image_url"
+          alt="Hotel"
+          class="w-full h-48 object-cover rounded-lg mb-3"
+        />
+        <h3 class="text-xl font-bold text-gray-800">{{ hotel.name }}</h3>
+        <p class="text-gray-600">{{ hotel.destination }}</p>
+        <p class="text-blue-600 font-semibold mt-1">₹{{ hotel.price_per_night }} / night</p>
+        <p><strong>Rooms:</strong> {{ hotel.available_rooms }}</p>
+        <p>
+          <strong>Status:</strong>
+          <span
+            [ngClass]="{
+              'text-green-600 font-medium': hotel.is_available,
+              'text-red-600 font-medium': !hotel.is_available
+            }"
+          >
+            {{ hotel.is_available ? 'Available' : 'Not Available' }}
+          </span>
+        </p>
+        <p *ngIf="hotel.discount"><strong>Discount:</strong> {{ hotel.discount }}%</p>
+
+        <button
+          (click)="bookHotel(hotel)"
+          class="mt-4 bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition w-full"
+        >
+          🏨 Book Now
+        </button>
+
+        <!-- Star Rating -->
+        <div class="flex items-center space-x-1 mt-3">
+          <ng-container *ngFor="let star of [1,2,3,4,5]">
+            <svg
+              (click)="rateHotel(hotel, star)"
+              [ngClass]="{
+                'text-yellow-400': star <= getAverageRating(hotel),
+                'text-gray-300': star > getAverageRating(hotel)
+              }"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 cursor-pointer hover:text-yellow-500 transition-colors"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.177 3.624a1 1 0 00.95.69h3.812c.969 0 1.371 1.24.588 1.81l-3.084 2.24a1 1 0 00-.364 1.118l1.177 3.624c.3.921-.755 1.688-1.54 1.118l-3.084-2.24a1 1 0 00-1.175 0l-3.084 2.24c-.784.57-1.838-.197-1.54-1.118l1.177-3.624a1 1 0 00-.364-1.118L2.49 9.051c-.783-.57-.38-1.81.588-1.81h3.812a1 1 0 00.95-.69l1.177-3.624z"
+              />
+            </svg>
+          </ng-container>
+          <span class="ml-2 text-sm text-gray-600">
+            {{ getAverageRating(hotel) | number: '1.1-1' }} / 5
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center text-blue-600 mt-8 text-lg font-medium">
+      🔄 Loading hotels...
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1" class="flex justify-center mt-10 space-x-2">
+      <button
+        class="px-4 py-2 rounded-xl border bg-white hover:bg-gray-100 disabled:opacity-50"
+        [disabled]="currentPage === 1"
+        (click)="changePage(currentPage - 1)"
+      >
+        ⬅️ Prev
+      </button>
+
+      <ng-container *ngFor="let page of paginationRange">
+        <button
+          class="px-4 py-2 rounded-xl border"
+          [ngClass]="{
+            'bg-blue-600 text-white': currentPage === page,
+            'bg-white hover:bg-gray-100': currentPage !== page
+          }"
+          (click)="changePage(page)"
+        >
+          {{ page }}
+        </button>
+      </ng-container>
+
+      <button
+        class="px-4 py-2 rounded-xl border bg-white hover:bg-gray-100 disabled:opacity-50"
+        [disabled]="currentPage === totalPages"
+        (click)="changePage(currentPage + 1)"
+      >
+        Next ➡️
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <app-footer></app-footer>
+</div>

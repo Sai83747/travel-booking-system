@@ -1,0 +1,14 @@
+<h2 mat-dialog-title>Booking Successful!</h2>
+
+<div mat-dialog-content>
+  <p><strong>Booking ID:</strong> {{ data.booking_id }}</p>
+  <p><strong>Hotel:</strong> {{ data.hotel.name }}</p>
+  <p><strong>Destination:</strong> {{ data.destination }}</p>
+  <p><strong>Number of People:</strong> {{ data.number_of_people }}</p>
+  <p><strong>Total Price:</strong> ₹{{ data.total_price }}</p>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="proceedToPayment()">Proceed to Payment</button>
+  <button mat-button mat-dialog-close>Close</button>
+</div>

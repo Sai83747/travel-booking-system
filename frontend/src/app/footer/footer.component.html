@@ -1,0 +1,46 @@
+<footer class="bg-gray-900 text-white py-10 mt-12">
+    <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- About Section -->
+      <div>
+        <h3 class="text-xl font-bold mb-4">TravelGo</h3>
+        <p class="text-sm text-gray-300">
+          Your one-stop destination for flights, hotels, and holiday packages. Explore the world with us!
+        </p>
+      </div>
+  
+      <!-- Quick Links -->
+      <div>
+        <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+        <ul class="space-y-2 text-gray-300 text-sm">
+          <li><a routerLink="/" class="hover:text-white">Home</a></li>
+          <li><a routerLink="/flights" class="hover:text-white">Flights</a></li>
+          <li><a routerLink="/bookings" class="hover:text-white">Bookings</a></li>
+          <li><a routerLink="/packages" class="hover:text-white">Packages</a></li>
+          <li><a routerLink="/contact" class="hover:text-white">Contact Us</a></li>
+        </ul>
+      </div>
+  
+      <!-- Newsletter -->
+      <div>
+        <h4 class="text-lg font-semibold mb-4">Subscribe to our newsletter</h4>
+        <form (submit)="onSubscribe()" class="space-y-3">
+          <input
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            required
+            placeholder="Enter your email"
+            class="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+            Subscribe
+          </button>
+        </form>
+      </div>
+    </div>
+  
+    <div class="border-t border-gray-700 mt-8 pt-4 text-center text-sm text-gray-400">
+      &copy; 2025 TravelGo. All rights reserved.
+    </div>
+  </footer>
+  

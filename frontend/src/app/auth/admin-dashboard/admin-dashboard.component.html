@@ -1,0 +1,156 @@
+<app-admin-navbar></app-admin-navbar>
+<div class="p-6 space-y-6 max-w-7xl mx-auto">
+  <h1 class="text-3xl font-bold text-gray-800 mb-4">Admin Dashboard</h1>
+
+  <!-- 🔍 Category Search Component -->
+  <app-category-search></app-category-search>
+
+  <!-- Cards Section -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="bg-white rounded-2xl shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-blue-800">Register Admin</h2>
+      <button (click)="openAdminModal()" class="btn-primary w-full">Open Form</button>
+    </div>
+    <div class="bg-white rounded-2xl shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-green-800">Register Travel Agent</h2>
+      <button (click)="openAgentModal()" class="btn-primary bg-green-600 hover:bg-green-700 w-full">Register</button>
+    </div>
+    <div class="bg-white rounded-2xl shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-indigo-800">Add Destination</h2>
+      <button (click)="openDestinationModal()" class="btn-primary w-full">Add Destination</button>
+    </div>
+    <div class="bg-white rounded-2xl shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-pink-800">Add Hotel</h2>
+      <button (click)="openHotelModal()" class="btn-primary w-full">Add Hotel</button>
+    </div>
+    <div class="bg-white rounded-2xl shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-yellow-700">Add Flight</h2>
+      <button (click)="openFlightModal()" class="btn-primary w-full">Add Flight</button>
+    </div>
+    <div class="bg-white rounded-2xl shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-purple-700">Add Package</h2>
+      <button (click)="openPackageModal()" class="btn-primary w-full">Add Package</button>
+    </div>
+  </div>
+</div>
+
+<!-- 🔲 Admin Modal -->
+<div *ngIf="isAdminModalOpen" class="modal-backdrop">
+  <div class="modal">
+    <button (click)="closeAdminModal()" class="modal-close">&times;</button>
+    <h2 class="modal-title text-blue-700">Register Admin</h2>
+    <form [formGroup]="adminForm" (ngSubmit)="registerAdmin()" class="space-y-4">
+      <input formControlName="display_name" placeholder="Display Name" class="input" />
+      <input formControlName="email" type="email" placeholder="Email" class="input" />
+      <input formControlName="phone_number" placeholder="Phone Number" class="input" />
+      <input formControlName="location" placeholder="Location" class="input" />
+      <button type="submit" class="btn-primary w-full" [disabled]="adminForm.invalid">Register Admin</button>
+      <div class="text-sm text-gray-600 mt-2">{{ adminMessage }}</div>
+    </form>
+  </div>
+</div>
+
+<!-- 🧳 Agent Modal -->
+<div *ngIf="isAgentModalOpen" class="modal-backdrop">
+  <div class="modal">
+    <button (click)="closeAgentModal()" class="modal-close">&times;</button>
+    <h2 class="modal-title text-green-700">Register Travel Agent</h2>
+    <form [formGroup]="agentForm" (ngSubmit)="registerAgent()" class="space-y-4">
+      <input formControlName="display_name" placeholder="Display Name" class="input" />
+      <input formControlName="email" type="email" placeholder="Email" class="input" />
+      <input formControlName="phone_number" placeholder="Phone Number" class="input" />
+      <input formControlName="location" placeholder="Location" class="input" />
+      <button type="submit" class="btn-primary w-full" [disabled]="agentForm.invalid">Register Agent</button>
+      <div class="text-sm text-gray-600 mt-2">{{ agentMessage }}</div>
+    </form>
+  </div>
+</div>
+
+<!-- 🗺️ Destination Modal -->
+<div *ngIf="isDestinationModalOpen" class="modal-backdrop">
+  <div class="modal">
+    <button (click)="closeDestinationModal()" class="modal-close">&times;</button>
+    <h2 class="modal-title text-indigo-700">Add Destination</h2>
+    <form [formGroup]="destinationForm" (ngSubmit)="addDestination()" class="space-y-4">
+      <input formControlName="name" placeholder="Destination Name" class="input" />
+      <input formControlName="location" placeholder="Location" class="input" />
+      <textarea formControlName="description" placeholder="Description" class="input"></textarea>
+      <input formControlName="image_url" placeholder="Image URL" class="input" />
+      <input formControlName="price" type="number" placeholder="Price" class="input" />
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" formControlName="availability" />
+        <span>Available</span>
+      </label>
+      <button type="submit" class="btn-primary w-full" [disabled]="destinationForm.invalid">Add Destination</button>
+      <div class="text-sm text-green-600 mt-2">{{ destinationMessage }}</div>
+    </form>
+  </div>
+</div>
+
+<!-- 🏨 Hotel Modal -->
+<div *ngIf="isHotelModalOpen" class="modal-backdrop">
+  <div class="modal">
+    <button (click)="closeHotelModal()" class="modal-close">&times;</button>
+    <h2 class="modal-title text-pink-700">Add Hotel</h2>
+    <form [formGroup]="hotelForm" (ngSubmit)="addHotel()" class="space-y-4">
+      <input formControlName="name" placeholder="Hotel Name" class="input" />
+      <select formControlName="destination" class="input">
+        <option value="" disabled selected>Select a Destination</option>
+        <option *ngFor="let dest of destinations" [value]="dest.id">{{ dest.name }}</option>
+      </select>
+      <input formControlName="available_rooms" type="number" placeholder="Available Rooms" class="input" />
+      <input formControlName="price_per_night" type="number" placeholder="Price per Night" class="input" />
+      <input formControlName="discount" type="number" placeholder="Discount (%)" class="input" />
+      <input formControlName="image_url" placeholder="Hotel Image URL" class="input" />
+      <button type="submit" class="btn-primary w-full" [disabled]="hotelForm.invalid">Add Hotel</button>
+      <div class="text-sm text-green-600 mt-2">{{ hotelMessage }}</div>
+    </form>
+  </div>
+</div>
+
+<!-- ✈️ Flight Form (inline) -->
+<div class="max-w-xl mx-auto p-4 bg-white rounded shadow space-y-6">
+  <h2 class="text-2xl font-semibold text-yellow-700">Add Flight</h2>
+  <form [formGroup]="flightForm" (ngSubmit)="addFlight()" class="space-y-4">
+    <input formControlName="flight_number" placeholder="Flight Number" class="input" />
+    <select formControlName="source" class="input">
+      <option value="" disabled selected>Select Source</option>
+      <option *ngFor="let dest of destinations" [value]="dest.id">{{ dest.name }}</option>
+    </select>
+    <select formControlName="destination" class="input">
+      <option value="" disabled selected>Select Destination</option>
+      <option *ngFor="let dest of destinations" [value]="dest.id">{{ dest.name }}</option>
+    </select>
+    <input formControlName="available_seats" type="number" placeholder="Available Seats" class="input" />
+    <input formControlName="price_per_seat" type="number" placeholder="Price per Seat" class="input" />
+    <input formControlName="discount" type="number" placeholder="Discount (%)" class="input" />
+    <input formControlName="flight_icon_url" placeholder="Flight Icon URL (optional)" class="input" />
+    <button type="submit" class="btn-primary w-full" [disabled]="flightForm.invalid">Add Flight</button>
+    <div class="text-sm text-green-600 mt-2">{{ flightMessage }}</div>
+  </form>
+</div>
+
+<!-- 🎁 Package Modal -->
+<div *ngIf="isPackageModalOpen" class="modal-backdrop">
+  <div class="modal">
+    <button (click)="closePackageModal()" class="modal-close">&times;</button>
+    <h2 class="modal-title text-purple-700">Add Package</h2>
+    <form [formGroup]="packageForm" (ngSubmit)="addPackage()" class="space-y-4">
+      <input formControlName="name" placeholder="Package Name" class="input" />
+      <select formControlName="source" class="input">
+        <option value="">Select Source</option>
+        <option *ngFor="let d of destinations" [value]="d.id">{{ d.name }}</option>
+      </select>
+      <select formControlName="destination" class="input">
+        <option value="">Select Destination</option>
+        <option *ngFor="let d of destinations" [value]="d.id">{{ d.name }}</option>
+      </select>
+      <input formControlName="duration_days" type="number" placeholder="Duration (in days)" class="input" />
+      <input formControlName="price" type="number" placeholder="Total Price" class="input" />
+      <input formControlName="discount" type="number" step="0.01" placeholder="Discount %" class="input" />
+      <input formControlName="image_url" placeholder="Image URL" class="input" />
+      <button type="submit" class="btn-primary w-full" [disabled]="packageForm.invalid">Add Package</button>
+      <div class="text-sm text-gray-600 mt-2">{{ packageMessage }}</div>
+    </form>
+  </div>
+</div>

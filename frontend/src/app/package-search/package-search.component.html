@@ -1,0 +1,294 @@
+<div class="min-h-screen flex flex-col bg-gray-50">
+  <!-- Navbar -->
+  <app-navbar></app-navbar>
+
+  <!-- Main Content -->
+  <div class="flex-grow container mx-auto px-4 py-8">
+    <h2 class="text-4xl font-extrabold text-center text-indigo-800 mb-10">🏨 Explore Travel Packages</h2>
+
+    <!-- Search Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-10">
+      <!-- Source -->
+      <div class="relative">
+        <input
+          [(ngModel)]="sourceQuery"
+          (input)="searchSource()"
+          type="text"
+          placeholder="Source"
+          class="input"
+        />
+        <ul *ngIf="sourceResults.length" class="dropdown">
+          <li *ngFor="let src of sourceResults" (click)="selectSource(src)"
+              class="dropdown-item">{{ src.name }}</li>
+        </ul>
+      </div>
+
+      <!-- Destination -->
+      <div class="relative">
+        <input
+          [(ngModel)]="destinationQuery"
+          (input)="searchDestination()"
+          type="text"
+          placeholder="Destination"
+          class="input"
+        />
+        <ul *ngIf="destinationResults.length" class="dropdown">
+          <li *ngFor="let dest of destinationResults" (click)="selectDestination(dest)"
+              class="dropdown-item">{{ dest.name }}</li>
+        </ul>
+      </div>
+
+      <!-- Price Inputs -->
+      <input [(ngModel)]="minPrice" type="number" min="0" placeholder="Min Price" class="input" />
+      <input [(ngModel)]="maxPrice" type="number" min="0" placeholder="Max Price" class="input" />
+
+      <button (click)="searchPackages()" class="btn-primary w-full">
+        🔍 Search
+      </button>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="text-red-600 text-center font-medium mb-6">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center text-blue-600 font-medium">
+      🔄 Loading packages...
+    </div>
+
+    <!-- Package Cards -->
+    <div *ngIf="packages.length > 0" class="grid md:grid-cols-2 gap-6">
+      <div *ngFor="let pkg of packages" class="card">
+        <img *ngIf="pkg.image_url" [src]="pkg.image_url" alt="Package" class="card-img" />
+        <div class="mt-2">
+          <h3 class="text-xl font-bold text-indigo-800">{{ pkg.name }}</h3>
+          <p class="text-gray-600">{{ pkg.source }} → {{ pkg.destination }}</p>
+          <p class="text-sm mt-1"><strong>Price:</strong> ₹{{ pkg.price }}</p>
+          <p class="text-sm"><strong>Discount:</strong> {{ pkg.discount }}%</p>
+          <p class="text-sm"><strong>Duration:</strong> {{ pkg.duration_days }} days</p>
+          <p class="text-sm"><strong>Availability:</strong> {{ pkg.availability }}</p>
+
+          <!-- Ratings -->
+          <div class="flex items-center space-x-1 mt-2">
+            <ng-container *ngFor="let star of [1,2,3,4,5]">
+              <svg (click)="ratePackage(pkg, star)"
+                [ngClass]="{
+                  'text-yellow-400 cursor-pointer': star <= getAverageRating(pkg),
+                  'text-gray-300 cursor-pointer': star > getAverageRating(pkg)
+                }"
+                xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.177 3.624a1 1 0 00.95.69h3.812c.969 0 1.371 1.24.588 1.81l-3.084 2.24a1 1 0 00-.364 1.118l1.177 3.624c.3.921-.755 1.688-1.54 1.118l-3.084-2.24a1 1 0 00-1.175 0l-3.084 2.24c-.784.57-1.838-.197-1.54-1.118l1.177-3.624a1 1 0 00-.364-1.118L2.49 9.051c-.783-.57-.38-1.81.588-1.81h3.812a1 1 0 00.95-.69l1.177-3.624z" />
+              </svg>
+            </ng-container>
+            <span class="ml-2 text-sm text-gray-600">{{ getAverageRating(pkg) | number: '1.1-1' }} / 5</span>
+          </div>
+
+          <button (click)="viewPackageDetails(pkg)" class="btn-secondary mt-3">
+            View Details
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <app-footer></app-footer>
+</div>
+
+<!-- Modal -->
+<div *ngIf="showDetailsModal" class="modal-overlay">
+  <div class="modal-content w-full max-w-3xl">
+    <button (click)="closeModal()" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl">✖️</button>
+    <h2 class="text-2xl font-semibold text-indigo-700 mb-4">{{ selectedPackage.name }} - Details</h2>
+
+    <p><strong>From:</strong> {{ selectedPackage.source }} | <strong>To:</strong> {{ selectedPackage.destination }}</p>
+    <p><strong>Duration:</strong> {{ selectedPackage.duration_days }} days</p>
+    <p><strong>Price:</strong> ₹{{ selectedPackage.price }} | <strong>Discount:</strong> {{ selectedPackage.discount }}%</p>
+
+    <div *ngFor="let path of packageDetails" class="border-t pt-4 mt-4 space-y-1">
+      <p><strong>Path:</strong> {{ path.path.join(' → ') }}</p>
+      <p><strong>Availability:</strong> {{ path.availability }}</p>
+      <p><strong>Final Price:</strong> ₹{{ path.price }}</p>
+
+      <div>
+        <strong>Flights:</strong>
+        <ul class="list-disc pl-5">
+          <li *ngFor="let f of path.flights">
+            ✈️ {{ f.flight_number }} ({{ f.departure }} → {{ f.arrival }}) - ₹{{ f.price_per_seat }} ({{ f.available_seats }} seats)
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <strong>Hotels:</strong>
+        <div><em>Source Hotels:</em>
+          <ul class="list-disc pl-5">
+            <li *ngFor="let h of path.source_hotels">
+              🏨 {{ h.name }} - ₹{{ h.price_per_night }} ({{ h.available_rooms }} rooms)
+            </li>
+          </ul>
+        </div>
+        <div><em>Destination Hotels:</em>
+          <ul class="list-disc pl-5">
+            <li *ngFor="let h of path.destination_hotels">
+              🏨 {{ h.name }} - ₹{{ h.price_per_night }} ({{ h.available_rooms }} rooms)
+            </li>
+          </ul>
+        </div>
+        <div><em>Intermediate Hotels:</em>
+          <div *ngFor="let stop of path.intermediate_hotels | keyvalue">
+            <em class="block mt-1">At {{ stop.key }}:</em>
+            <ul class="list-disc pl-5">
+              <li *ngFor="let h of stop.value">
+                🏨 {{ h.name }} - ₹{{ h.price_per_night }} ({{ h.available_rooms }} rooms)
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-3 flex items-center gap-2">
+        <label class="font-medium">People:</label>
+        <input type="number" [(ngModel)]="path.numPeople" min="1" class="input w-24" />
+        <button (click)="bookPath(path)" class="btn-success">
+          🛎️ Book
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tailwind Utility Classes -->
+<style>
+ .input {
+  border: 1px solid #d1d5db; /* Tailwind: border-gray-300 */
+  border-radius: 0.375rem; /* rounded */
+  padding: 0.5rem 1rem; /* py-2 px-4 */
+  width: 100%;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  outline: none;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5); /* focus:ring-2 focus:ring-blue-400 */
+}
+
+.btn-primary {
+  background-color: #2563eb; /* bg-blue-600 */
+  color: white;
+  font-weight: 600; /* font-semibold */
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8; /* bg-blue-700 */
+}
+
+.btn-secondary {
+  background-color: #4f46e5; /* bg-indigo-600 */
+  color: white;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+  border: none;
+}
+
+.btn-secondary:hover {
+  background-color: #4338ca; /* bg-indigo-700 */
+}
+
+.btn-success {
+  background-color: #16a34a; /* bg-green-600 */
+  color: white;
+  font-weight: 500;
+  padding: 0.25rem 1rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+  border: none;
+}
+
+.btn-success:hover {
+  background-color: #15803d; /* bg-green-700 */
+}
+
+.card {
+  border: 1px solid #e5e7eb; /* border */
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: white;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* shadow-md */
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* hover:shadow-lg */
+}
+
+.card-img {
+  width: 100%;
+  height: 12rem; /* h-48 */
+  object-fit: cover;
+  border-radius: 0.375rem; /* rounded-md */
+  margin-bottom: 1rem;
+}
+
+.dropdown {
+  position: absolute;
+  z-index: 10;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  width: 100%;
+  margin-top: 0.25rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 10rem;
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #e0f2fe; /* hover:bg-blue-100 */
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  max-height: 90vh;
+  width: 100%;
+  max-width: 48rem;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+  .card-img {
+    width: 100%;
+    height: 12rem; /* Equivalent to h-48 */
+    object-fit: cover; /* Equivalent to object-cover */
+    border-radius: 0.375rem; /* Equivalent to rounded-md */
+    margin-bottom: 1rem; /* Equivalent to mb-4 */
+  }
+
+</style>

@@ -1,0 +1,15 @@
+django
+djangorestframework
+mysqlclient
+firebase-admin
+python-dotenv
+djangorestframework-simplejwt
+Django
+
+django-filter>=23.2
+psycopg2-binary>=2.9.9
+
+
+
+django-cors-headers
+djangorestframework-simplejwt
